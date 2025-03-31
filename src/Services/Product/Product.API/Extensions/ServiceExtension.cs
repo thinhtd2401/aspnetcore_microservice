@@ -1,3 +1,4 @@
+namespace Product.API.Extensions;
 public static class ServiceExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
