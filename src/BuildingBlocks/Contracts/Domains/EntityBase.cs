@@ -4,5 +4,5 @@ namespace Contracts.Domains;
 
 public abstract class EntityBase<TKey> : IEntityBase<TKey>
 {
-    public required TKey Id { get; set; }
+    public virtual TKey Id { get; set; }
 }

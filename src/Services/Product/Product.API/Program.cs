@@ -1,26 +1,26 @@
 
 using Common.Logging;
 using Product.API.Extensions;
+using Product.API.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 try
 {
-    if (!IsRunningFromEF())
-    {
-        builder.Services.AddSerilogger(builder.Environment, builder.Configuration);
-    }
+    
+    builder.Services.AddSerilogger(builder.Environment, builder.Configuration, AppDomain.CurrentDomain);
+    
     builder.Host.UseSerilog();
     Log.Information("Starting Product API up");
-
     builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
-
-    
     app.UseInfrastructure();
-    app.MapControllers();
-    app.Run();
+    app.MigrateDatabase<ProductContext>((context, services) =>
+    {
+        var logger = services.GetService<ILogger<ProductContextSeed>>();
+        if (logger != null) ProductContextSeed.SeedAsync(context, logger).Wait();
+    }).Run();
     
 }
 catch (Exception ex)
@@ -38,13 +38,5 @@ finally
     Log.Information("Shut down Product API complete");
     Log.CloseAndFlush();
 }
-
-// Helper method to detect if we're running `dotnet ef`
-static bool IsRunningFromEF()
-{
-    return AppDomain.CurrentDomain.GetAssemblies()
-        .Any(a => a.FullName!.StartsWith("Microsoft.EntityFrameworkCore.Design", StringComparison.OrdinalIgnoreCase));
-}
-
 
         
